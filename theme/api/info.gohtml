@@ -1,0 +1,67 @@
+{{template "header" .}}
+<div class="layui-body">
+    <!-- 内容主体区域 -->
+    <div style="padding: 15px;">
+        {{if ne .Err ""}}
+        <blockquote class="layui-elem-quote layui-text" style="border-left-color:#ff5722">
+            <span class="layui-badge layui-bg-red">ERR</span>
+            {{ .Err }}
+        </blockquote>
+        <hr class="layui-border-blue">
+
+        {{ end }}
+        <blockquote class="layui-elem-quote layui-text">
+            <span class="layui-badge layui-bg-green">{{ .Api.Mode }}</span>
+            {{ .Api.Url }}
+        </blockquote>
+        <div class="layui-collapse" lay-filter="filter-collapse" lay-accordion>
+            <div class="layui-colla-item">
+                <div class="layui-colla-title">请求参数</div>
+                <div class="layui-colla-content">
+                    <table lay-filter="parse-table">
+                        <thead>
+                        <tr>
+                            <th lay-data="{field:'name', width:150}">参数名</th>
+                            <th lay-data="{field:'required', width:50}">必填</th>
+                            <th lay-data="{field:'description', minWidth: 180}">介绍</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{ range .Api.Args }}
+                            <tr>
+                                <td>{{ .Name }}</td>
+                                <td>{{ if .Required }}√ {{ else }}× {{ end }}</td>
+                                <td>{{ .Description }}</td>
+                            </tr>
+                        {{ end }}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr class="layui-border-orange">
+            <div class="layui-card layui-panel">
+                <div class="layui-card-header">
+                    响应示例
+                </div>
+                <div class="layui-card-body">
+                    <pre class="layui-code code-resp" lay-options="{lang:'json'}">{{ .Api.SampleResponse }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(function () {
+        var table = layui.table;
+        var element = layui.element;
+        element.on('collapse(filter-collapse)', function (data) {
+            if (data.show) {
+                table.init('parse-table', {});
+            }
+        });
+        layui.code({
+            elem: '.code-resp'
+        });
+    });
+</script>
+{{template "footer" .}}
