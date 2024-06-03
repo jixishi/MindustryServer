@@ -1,13 +1,10 @@
 package Mdt
 
 import (
+	"MindustryServer/utils"
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"net"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -109,29 +106,16 @@ func connectServer(host string) (buf InfoBuffer, ping int64, err error) {
 }
 func GetServerInfo(host string) (Info, error) {
 	var info Info
-	ip := strings.Split(host, ":")
-	if len(ip) == 1 {
-		info.Host = host
-		info.Port = 6567
-	} else {
-		info.Host = ip[0]
-		port, err := strconv.Atoi(ip[1])
-		if err != nil {
-			return info, err
-		}
-		info.Port = port
-	}
-	add := fmt.Sprintf("%s:%d", info.Host, info.Port)
-	buf, ping, err := connectServer(add)
+	host = utils.HostPreProcessing(host)
+	buf, ping, err := connectServer(host)
 	if err != nil {
 		info.Status = "Offline"
 		return info, err
 	}
-	reg := regexp.MustCompile("(?s)\\[.*?\\]")
 	info.Ping = int(ping)
 	info.Status = "Online"
-	info.Name = reg.ReplaceAllString(buf.readString(), "")
-	info.Maps = reg.ReplaceAllString(buf.readString(), "")
+	info.Name = buf.readString()
+	info.Maps = buf.readString()
 	info.Players = buf.getInt()
 	info.Wave = buf.getInt()
 	info.Version = buf.getInt()
@@ -139,7 +123,7 @@ func GetServerInfo(host string) (Info, error) {
 	info.Gamemode.Id = GamemodeId(buf.get())
 	info.Gamemode.Name = info.Gamemode.Id.Name()
 	info.Limit = buf.getInt()
-	info.Description = reg.ReplaceAllString(buf.readString(), "")
+	info.Description = buf.readString()
 	info.Modename = buf.readString()
 	return info, nil
 }

@@ -2,10 +2,11 @@ package main
 
 import (
 	"MindustryServer/Mdt"
+	"MindustryServer/config"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 )
 
 type Api struct {
@@ -24,7 +25,7 @@ func ApiViewBuild(api Api, err interface{}, data interface{}) map[string]interfa
 	return map[string]interface{}{
 		"Api":    api,
 		"Err":    err,
-		"Config": Cfg,
+		"Config": config.Cfg,
 		"Data":   data,
 	}
 }
@@ -56,11 +57,7 @@ func GetMindustryInfo(w http.ResponseWriter, r *http.Request) {
 	mode := r.Form.Get("mode")
 	if host != "" {
 		info, err = Mdt.GetServerInfo(host)
-		if !inServers(Cfg.Servers, Server{Host: host, Name: info.Name}) {
-			Cfg.Servers = append(Cfg.Servers, Server{Host: host, Name: info.Name})
-			SaveConfig(ConfigPath)
-			fmt.Printf("配置文件更新完成:\t%s\n", ConfigPath)
-		}
+		config.UpdateConfig(config.Server{Host: host, Name: info.Name})
 		if mode == "" {
 			w.Header().Set("Content-Type", "application/json;charset=utf-8")
 			err = json.NewEncoder(w).Encode(info)
@@ -73,11 +70,16 @@ func GetMindustryInfo(w http.ResponseWriter, r *http.Request) {
 			err = json.NewEncoder(w).Encode(ServersPlayers[host])
 		}
 		if mode == "html" {
+			reg := regexp.MustCompile("(?s)\\[.*?\\]")
+			info.Name = reg.ReplaceAllString(info.Name, "")
+			info.Maps = reg.ReplaceAllString(info.Maps, "")
+			info.Description = reg.ReplaceAllString(info.Description, "")
+
 			Apis.Mindustry.DataInfoView(w, Mindustry, map[string]interface{}{
 				"Info":     info,
 				"UpUrl":    Mindustry.Url + "?host=" + host,
 				"Players":  ServersPlayers[host],
-				"Interval": Cfg.Interval,
+				"Interval": config.Cfg.Interval,
 			})
 		}
 	} else {

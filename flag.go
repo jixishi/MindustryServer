@@ -1,6 +1,9 @@
 package main
 
-import "flag"
+import (
+	"MindustryServer/config"
+	"flag"
+)
 
 type ptrVal struct {
 	*string
@@ -43,7 +46,7 @@ var newhost string
 var chost string
 
 func init() {
-	flagInit(&Flag{ptrVal{int: &Cfg.Port}, "p", "port", Val{int: 8080}, "Api接口地址"})
+	flagInit(&Flag{ptrVal{int: &config.Cfg.Port}, "p", "port", Val{int: 8080}, "Api接口地址"})
 	flagInit(&Flag{ptrVal{string: &newhost}, "a", "add", Val{string: ""}, "添加服务器地址"})
 	flagInit(&Flag{ptrVal{string: &chost}, "h", "host", Val{string: ""}, "服务器地址\tip:port"})
 }

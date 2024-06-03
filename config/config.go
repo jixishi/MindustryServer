@@ -1,7 +1,8 @@
-package main
+package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -19,8 +20,16 @@ type Server struct {
 var Cfg Config
 var ConfigPath = "./config.json"
 
-func LoadConfig(path string) error {
-	jsonFile, err := os.Open(path)
+func InServers(arr []Server, target Server) bool {
+	for _, v := range arr {
+		if v.Host == target.Host {
+			return true
+		}
+	}
+	return false
+}
+func LoadConfig() error {
+	jsonFile, err := os.Open(ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -29,8 +38,8 @@ func LoadConfig(path string) error {
 	err = decoder.Decode(&Cfg)
 	return err
 }
-func SaveConfig(path string) error {
-	jsonFile, err := os.Create(path)
+func SaveConfig() error {
+	jsonFile, err := os.Create(ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -39,4 +48,12 @@ func SaveConfig(path string) error {
 	encode.SetIndent("", "\t")
 	err = encode.Encode(Cfg)
 	return nil
+}
+
+func UpdateConfig(server Server) {
+	if !InServers(Cfg.Servers, server) {
+		Cfg.Servers = append(Cfg.Servers, server)
+		SaveConfig()
+		fmt.Printf("配置文件更新完成:\t%v\n", server)
+	}
 }

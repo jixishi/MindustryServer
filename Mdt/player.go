@@ -1,11 +1,16 @@
 package Mdt
 
+import "C"
 import (
+	"MindustryServer/utils"
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"github.com/google/uuid"
 	"hash/crc32"
+	"net"
+	"time"
 )
 
 //(ip.src == 185.248.33.51) or (ip.addr == 185.248.33.51)
@@ -57,7 +62,7 @@ func (p *PlayerBuffer) set(b byte) {
 	p.WriteByte(b)
 }
 func (p *PlayerBuffer) writeInt(i int32) {
-	err := binary.Write(p, binary.BigEndian, &i)
+	err := binary.Write(p, binary.LittleEndian, &i)
 	if err != nil {
 		return
 	}
@@ -68,9 +73,44 @@ func (p *PlayerBuffer) writel(i uint32) {
 		return
 	}
 }
-func NewPlayer(name, versiontype, locale string, version int) PlayerBuffer {
+
+type ClientBuf struct {
+	*bytes.Buffer
+	tid []byte
+	uid []byte
+	cnt int32
+}
+
+//func newClientBuf() *ClientBuf {
+//	p := new(ClientBuf)
+//	return p
+//}
+//func (c *ClientBuf) GetClientID() {
+//	c.ReadByte()
+//	l, _ := c.ReadByte()
+//	b := make([]byte, l)
+//	c.Read(b)
+//	switch b[1] {
+//	case 3:
+//		c.uid = b[2:]
+//	case 4:
+//		c.tid = b[2:]
+//	}
+//	return
+//}
+//
+//func (c *ClientBuf) RegTCP(C net.Conn) {
+//	b := []byte{0xfe, 0x04}
+//	C.Write(append(b, c.tid...))
+//}
+//func (c *ClientBuf) RegUDP(C net.Conn) {
+//	b := []byte{0xfe, 0x03}
+//	C.Write(append(b, c.uid...))
+//}
+
+func NewPlayer(name, versiontype, locale string, version int32) PlayerBuffer {
 	p := newPlayerBuffer()
-	p.writeInt(int32(version))
+	p.writeInt(146)
 	if versiontype == "" {
 		versiontype = "official"
 	}
@@ -88,4 +128,61 @@ func NewPlayer(name, versiontype, locale string, version int) PlayerBuffer {
 	p.writeInt(0)
 	p.WriteByte(0)
 	return *p
+}
+
+func GetPlayerList(host string) {
+	host = utils.HostPreProcessing(host)
+	tbuf := make([]byte, 1024)
+	//ubuf := make([]byte, 2048)
+	udp, _ := net.Dial("udp", host)
+	tcp, _ := net.Dial("tcp", host)
+	defer udp.Close()
+	defer tcp.Close()
+	tcp.Read(tbuf)
+	fmt.Printf("\n%x\n", tbuf)
+	b := bytes.NewReader(tbuf)
+	b.ReadByte()
+	l, _ := b.ReadByte()
+	ib := make([]byte, l)
+	b.Read(ib)
+	var uid, tid []byte
+	switch ib[1] {
+	case 3:
+		uid = ib[2:]
+		fmt.Printf("\nuid:%x\n", uid)
+	case 4:
+		tid = ib[2:]
+		fmt.Printf("\ntid:%x\n", tid)
+	}
+	ib = []byte{0xfe, 0x03}
+	udp.Write(append(ib, tid...))
+	time.Sleep(100 * time.Millisecond)
+	udp.Write(append(ib, tid...))
+	tcp.Read(tbuf)
+	fmt.Printf("\n%x\n", tbuf)
+	b = bytes.NewReader(tbuf)
+	b.ReadByte()
+	l, _ = b.ReadByte()
+	ib = make([]byte, l)
+	b.Read(ib)
+	switch ib[1] {
+	case 3:
+		uid = ib[2:]
+		fmt.Printf("\nuid:%x\n", uid)
+	case 4:
+		tid = ib[2:]
+		fmt.Printf("\ntid:%x\n", tid)
+	}
+	//c := newClientBuf()
+	//c.Buffer.Write(tbuf)
+	//c.GetClientID()
+	//c.RegTCP(udp)
+	//c.RegTCP(udp)
+	//c.GetClientID()
+	p := NewPlayer("jxs", "", "", 146)
+	tcp.Write(p.Bytes())
+	tcp.Read(tbuf)
+	fmt.Println(string(tbuf))
+	tcp.Read(tbuf)
+	fmt.Println(string(tbuf))
 }
