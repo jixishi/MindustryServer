@@ -5,7 +5,7 @@
 			"host": "cn.mindustry.top"
 		},
 		{
-			"name": "[pink]Anana",
+			"name": "",
 			"host": "mdtleague.top"
 		},
 		{
@@ -13,10 +13,19 @@
 			"host": "n2.akiracloud.net:10686"
 		},
 		{
-			"name": "[yellow]⚡ [#ff]Ranked 1 vs 1 [yellow]⚡",
+			"name": "",
 			"host": "mindustryranked.ddns.net:16567"
+		},
+		{
+			"name": "[RED]新[YELLOW]神域[BLUE]服务器",
+			"host": "n2.akiracloud.net:10225"
+		},
+		{
+			"name": "[orange]mindustry.ddns.net [gray]- [white]HUB",
+			"host": "185.248.33.51"
 		}
 	],
 	"port": 8080,
-	"themesDir": "theme"
+	"themesDir": "theme",
+	"interval": 20
 }

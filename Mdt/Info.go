@@ -1,8 +1,7 @@
-package ServerInfo
+package Mdt
 
 import (
 	"bytes"
-	"context"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -26,7 +25,7 @@ type Gamemode struct {
 	Id   GamemodeId `json:"id"`
 }
 
-type ServerInfo struct {
+type Info struct {
 	Host        string   `json:"host"`
 	Port        int      `json:"port"`
 	Status      string   `json:"status"`
@@ -86,45 +85,29 @@ func (r *InfoBuffer) get() byte {
 	return b
 }
 
-func connectServer(host string) (buf InfoBuffer, err error) {
+func connectServer(host string) (buf InfoBuffer, ping int64, err error) {
 	socket, err := net.Dial("udp", host)
 	if err != nil {
-		return InfoBuffer{}, err
+		return InfoBuffer{}, -1, err
 	}
 	defer socket.Close()
+	startTime := time.Now()
 	_, err = socket.Write([]byte{0xFE, 0x01})
 	if err != nil {
-		return InfoBuffer{}, err
+		return InfoBuffer{}, -1, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
-	workDone := make(chan struct{}, 1)
 	data := make([]byte, 500)
-	go func() {
-		_, err = socket.Read(data)
-		workDone <- struct{}{}
-	}()
-	select {
-	case <-workDone:
-		buf.New(data)
-	case <-ctx.Done():
-		return InfoBuffer{}, fmt.Errorf("超时:%v", err)
-	}
-	return buf, nil
-}
-func ping(host string) (int64, error) {
-	startTime := time.Now()
-	conn, err := net.DialTimeout("tcp", host, time.Second*2)
+	socket.SetReadDeadline(time.Now().Add(2 * time.Second))
+	_, err = socket.Read(data)
 	if err != nil {
-		return 0, err
+		return InfoBuffer{}, -1, err
 	}
-	conn.Close()
-	conn.RemoteAddr()
-	elapsedTime := time.Since(startTime).Milliseconds()
-	return elapsedTime, nil
+	ping = time.Since(startTime).Milliseconds()
+	buf.New(data)
+	return buf, ping, nil
 }
-func GetServerInfo(host string) (ServerInfo, error) {
-	var info ServerInfo
+func GetServerInfo(host string) (Info, error) {
+	var info Info
 	ip := strings.Split(host, ":")
 	if len(ip) == 1 {
 		info.Host = host
@@ -138,17 +121,12 @@ func GetServerInfo(host string) (ServerInfo, error) {
 		info.Port = port
 	}
 	add := fmt.Sprintf("%s:%d", info.Host, info.Port)
-	d, err := ping(add)
+	buf, ping, err := connectServer(add)
 	if err != nil {
 		info.Status = "Offline"
 		return info, err
 	}
-	info.Ping = int(d)
-	buf, err := connectServer(add)
-	if err != nil {
-		info.Status = "Offline"
-		return info, err
-	}
+	info.Ping = int(ping)
 	info.Status = "Online"
 	info.Name = buf.readString()
 	info.Maps = buf.readString()

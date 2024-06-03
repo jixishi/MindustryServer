@@ -1,4 +1,4 @@
-package main
+package Mdt
 
 import (
 	"bytes"
@@ -68,7 +68,7 @@ func (p *PlayerBuffer) writel(i uint32) {
 		return
 	}
 }
-func NewPlayer(name, versiontype, locale string, version int) {
+func NewPlayer(name, versiontype, locale string, version int) PlayerBuffer {
 	p := newPlayerBuffer()
 	p.writeInt(int32(version))
 	if versiontype == "" {
@@ -87,4 +87,5 @@ func NewPlayer(name, versiontype, locale string, version int) {
 	p.WriteByte(0)
 	p.writeInt(0)
 	p.WriteByte(0)
+	return *p
 }

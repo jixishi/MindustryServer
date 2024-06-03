@@ -9,6 +9,7 @@ type Config struct {
 	Servers   []Server `json:"servers"`
 	Port      int      `json:"port"`
 	ThemesDir string   `json:"themesDir"`
+	Interval  int      `json:"interval"`
 }
 type Server struct {
 	Name string `json:"name"`
@@ -16,6 +17,7 @@ type Server struct {
 }
 
 var Cfg Config
+var ConfigPath = "./config.json"
 
 func LoadConfig(path string) error {
 	jsonFile, err := os.Open(path)

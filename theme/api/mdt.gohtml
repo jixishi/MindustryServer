@@ -1,10 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{{template "header" .}}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.1.1/dist/echarts.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.js"></script>
+<div style="padding: 15px;">
+    {{if ne .Err ""}}
+        <blockquote class="layui-elem-quote layui-text" style="border-left-color:#ff5722">
+            <span class="layui-badge layui-bg-red">ERR</span>
+            {{ .Err }}
+        </blockquote>
+        <hr class="layui-border-blue">
+    {{ end }}
+    <blockquote class="layui-elem-quote layui-text">
+        模式:
+        {{if eq .Data.Info.Gamemode.Id 0  }}<span class="layui-badge layui-bg-green">{{ end }}
+            {{if eq .Data.Info.Gamemode.Id 1  }}<span class="layui-badge layui-bg-blue">{{ end }}
+                {{if eq .Data.Info.Gamemode.Id 2  }}<span class="layui-badge layui-bg-red">{{ end }}
+                    {{if eq .Data.Info.Gamemode.Id 3  }}<span class="layui-badge layui-bg-orange">{{ end }}
+                        {{ .Data.Info.Gamemode.Name }}</span>
+    </blockquote>
+    <div class="layui-collapse" lay-filter="filter-collapse" lay-accordion>
+        {{/*        <div class="layui-colla-item">*/}}
+        {{/*            <div class="layui-colla-title">服务器信息</div>*/}}
+        {{/*            <div class="layui-colla-content">*/}}
+        {{/*                <table lay-filter="parse-table">*/}}
+        {{/*                    <thead>*/}}
+        {{/*                    <tr>*/}}
+        {{/*                        <th lay-data="{field:'name', width:150}">名称</th>*/}}
+        {{/*                        <th lay-data="{field:'required', width:50}">地址</th>*/}}
+        {{/*                        <th lay-data="{field:'description', minWidth: 180}">介绍</th>*/}}
+        {{/*                    </tr>*/}}
+        {{/*                    </thead>*/}}
+        {{/*                    <tbody>*/}}
+        {{/*                    {{ range .Api.Args }}*/}}
+        {{/*                        <tr>*/}}
+        {{/*                            <td>{{ .Name }}</td>*/}}
+        {{/*                            <td>{{ if .Required }}√ {{ else }}× {{ end }}</td>*/}}
+        {{/*                            <td>{{ .Description }}</td>*/}}
+        {{/*                        </tr>*/}}
+        {{/*                    {{ end }}*/}}
+        {{/*                    </tbody>*/}}
+        {{/*                </table>*/}}
+        {{/*            </div>*/}}
+        {{/*        </div>*/}}
+        <hr class="layui-border-orange">
+        <div class="layui-card">
+            <div class="layui-card-header">每{{ .Data.Interval }}s在线<button id="get-players" type="button" class="layui-btn layui-btn-normal layui-btn-radius">手动更新</button></div>
+            <div class="layui-card-body">
+                <div id="EchartZhu" style="width: 500px;height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var getBtn = $('#get-players');
+    var chartZhu = echarts.init(document.getElementById('EchartZhu'));
+    var players =[];
+    function generateTimes(interval) {
+        const times = [];
+        const totalSeconds = interval * 20;
+        for (let i = totalSeconds; i >= 0; i -= interval) {
+            const minutes = String(Math.floor(i / 60)).padStart(2, '0');
+            const seconds = String(i % 60).padStart(2, '0');
+            times.push(`${minutes}:${seconds}`);
+        }
+        return times;
+    }
+    // 调用该函数生成不同时间间隔的时间数组
+    const times = generateTimes({{ .Data.Interval }});
+    console.log(times);
+    getBtn.on('click', function () {
+        $.ajax({
+            url: "{{ .Data.UpUrl }}",
+            type: "GET",
+            data: {
+                "mode": "player"
+            },
+            success: function (res) {
+                players=res;
+                updateChart();
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        })
+    });
+    setInterval(function() {
+        $.ajax({
+            url: "{{ .Data.UpUrl }}",
+            type: "GET",
+            data: {
+                "mode": "player"
+            },
+            success: function (res) {
+                players = res;
+                updateChart();
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });
+    }, 1000); // 每60秒执行一次
 
-</body>
-</html>
+    function updateChart() {
+        var optionchartZhe = {
+            title: {
+                text: '在线玩家'
+            },
+            tooltip: {},
+            legend: {
+                data: ['玩家']
+            },
+            xAxis: {
+                // type: 'category',
+                // boundaryGap: false, //从起点开始
+                data: times
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                name: '活跃人数',
+                type: 'line', //线性
+                data: players,
+            }]
+        };
+        chartZhu.setOption(optionchartZhe, true);
+    }
+
+    // 在需要更新图表时调用该函数
+    updateChart();
+</script>
+{{template "footer" .}}
