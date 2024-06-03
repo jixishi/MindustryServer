@@ -1,7 +1,7 @@
 {
 	"servers": [
 		{
-			"name": "[CN][sky]微泽 []| [yellow] QQ交流群 1044335057",
+			"name": "微泽 |  QQ交流群 1044335057",
 			"host": "cn.mindustry.top"
 		},
 		{
@@ -9,7 +9,7 @@
 			"host": "mdtleague.top"
 		},
 		{
-			"name": "[acid]幽柠之域",
+			"name": "幽柠之域",
 			"host": "n2.akiracloud.net:10686"
 		},
 		{
@@ -17,11 +17,27 @@
 			"host": "mindustryranked.ddns.net:16567"
 		},
 		{
-			"name": "[RED]新[YELLOW]神域[BLUE]服务器",
+			"name": "新神域服务器",
 			"host": "n2.akiracloud.net:10225"
 		},
 		{
-			"name": "[orange]mindustry.ddns.net [gray]- [white]HUB",
+			"name": "mindustry.ddns.net - HUB",
+			"host": "185.248.33.51"
+		},
+		{
+			"name": "新神域服务器",
+			"host": "n2.akiracloud.net:10225"
+		},
+		{
+			"name": "mindustry.ddns.net - HUB",
+			"host": "185.248.33.51"
+		},
+		{
+			"name": "mindustry.ddns.net - HUB",
+			"host": "185.248.33.51"
+		},
+		{
+			"name": "mindustry.ddns.net - HUB",
 			"host": "185.248.33.51"
 		}
 	],

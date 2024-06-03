@@ -10,42 +10,64 @@
         <hr class="layui-border-blue">
     {{ end }}
     <blockquote class="layui-elem-quote layui-text">
-        模式:
-        {{if eq .Data.Info.Gamemode.Id 0  }}<span class="layui-badge layui-bg-green">{{ end }}
-            {{if eq .Data.Info.Gamemode.Id 1  }}<span class="layui-badge layui-bg-blue">{{ end }}
-                {{if eq .Data.Info.Gamemode.Id 2  }}<span class="layui-badge layui-bg-red">{{ end }}
-                    {{if eq .Data.Info.Gamemode.Id 3  }}<span class="layui-badge layui-bg-orange">{{ end }}
+        {{if eq .Data.Info.Gamemode.Id 0  }}
+        <span class="layui-badge layui-bg-green">
+            {{else if eq .Data.Info.Gamemode.Id 1  }}
+            <span class="layui-badge layui-bg-blue">
+                {{ else if eq .Data.Info.Gamemode.Id 2  }}
+                <span class="layui-badge layui-bg-red">
+                    {{else if eq .Data.Info.Gamemode.Id 3  }}
+                    <span class="layui-badge layui-bg-orange">
+                        {{ end }}
                         {{ .Data.Info.Gamemode.Name }}</span>
+         <span class="layui-badge layui-bg-purple">{{ .Data.Info.Players }}{{if eq .Data.Info.Limit 0}}{{else}}/{{.Data.Info.Limit}}{{end}}</span>
+        {{if le .Data.Info.Ping 60}}
+                    <span class="layui-badge layui-bg-green">
+                {{else if le .Data.Info.Ping 120}}
+                    <span class="layui-badge layui-bg-orange">
+                {{else if le .Data.Info.Ping 180}}
+                    <span class="layui-badge layui-bg-red">
+                {{else}}
+                    <span class="layui-badge" style="background-color: rgb(139, 0, 0)">
+                {{end}}
+                        {{.Data.Info.Ping}}ms</span>
     </blockquote>
     <div class="layui-collapse" lay-filter="filter-collapse" lay-accordion>
-        {{/*        <div class="layui-colla-item">*/}}
-        {{/*            <div class="layui-colla-title">服务器信息</div>*/}}
-        {{/*            <div class="layui-colla-content">*/}}
-        {{/*                <table lay-filter="parse-table">*/}}
-        {{/*                    <thead>*/}}
-        {{/*                    <tr>*/}}
-        {{/*                        <th lay-data="{field:'name', width:150}">名称</th>*/}}
-        {{/*                        <th lay-data="{field:'required', width:50}">地址</th>*/}}
-        {{/*                        <th lay-data="{field:'description', minWidth: 180}">介绍</th>*/}}
-        {{/*                    </tr>*/}}
-        {{/*                    </thead>*/}}
-        {{/*                    <tbody>*/}}
-        {{/*                    {{ range .Api.Args }}*/}}
-        {{/*                        <tr>*/}}
-        {{/*                            <td>{{ .Name }}</td>*/}}
-        {{/*                            <td>{{ if .Required }}√ {{ else }}× {{ end }}</td>*/}}
-        {{/*                            <td>{{ .Description }}</td>*/}}
-        {{/*                        </tr>*/}}
-        {{/*                    {{ end }}*/}}
-        {{/*                    </tbody>*/}}
-        {{/*                </table>*/}}
-        {{/*            </div>*/}}
-        {{/*        </div>*/}}
+        <div class="layui-colla-item">
+            <div class="layui-colla-title">服务器信息</div>
+            <div class="layui-colla-content">
+                <table lay-filter="parse-table">
+                    <thead>
+                    <tr>
+                        <th lay-data="{field:'name', width:280}">名称</th>
+                        <th lay-data="{field:'required', width:250}">地址</th>
+                        <th lay-data="{field:'description', minWidth: 280}">介绍</th>
+                        <th lay-data="{field:'ping', minWidth: 20}">延迟</th>
+                        <th lay-data="{field:'maps', minWidth: 150}">地图</th>
+                        <th lay-data="{field:'wave', minWidth: 20}">波次</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>{{ .Data.Info.Name }}</td>
+                        <td>{{ .Data.Info.Host }}:{{ .Data.Info.Port }}</td>
+                        <td>{{ .Data.Info.Description }}</td>
+                        <td>{{ .Data.Info.Ping }}</td>
+                        <td>{{ .Data.Info.Maps }}</td>
+                        <td>{{ .Data.Info.Wave }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <hr class="layui-border-orange">
         <div class="layui-card">
-            <div class="layui-card-header">每{{ .Data.Interval }}s在线<button id="get-players" type="button" class="layui-btn layui-btn-normal layui-btn-radius">手动更新</button></div>
+            <div class="layui-card-header">
+                <button id="get-players" type="button" class="layui-btn layui-btn-normal layui-btn-radius">手动更新
+                </button>
+            </div>
             <div class="layui-card-body">
-                <div id="EchartZhu" style="width: 500px;height: 500px;"></div>
+                <div id="EchartZhu" style="width: auto;height: 500px;"></div>
             </div>
         </div>
     </div>
@@ -53,7 +75,9 @@
 <script>
     var getBtn = $('#get-players');
     var chartZhu = echarts.init(document.getElementById('EchartZhu'));
-    var players =[];
+    var players = [];
+    const dynamicMax = {{ .Data.Info.Limit }};
+
     function generateTimes(interval) {
         const times = [];
         const totalSeconds = interval * 20;
@@ -64,6 +88,7 @@
         }
         return times;
     }
+
     // 调用该函数生成不同时间间隔的时间数组
     const times = generateTimes({{ .Data.Interval }});
     console.log(times);
@@ -75,7 +100,7 @@
                 "mode": "player"
             },
             success: function (res) {
-                players=res;
+                players = res;
                 updateChart();
             },
             error: function (err) {
@@ -83,7 +108,7 @@
             }
         })
     });
-    setInterval(function() {
+    setInterval(function () {
         $.ajax({
             url: "{{ .Data.UpUrl }}",
             type: "GET",
@@ -103,7 +128,7 @@
     function updateChart() {
         var optionchartZhe = {
             title: {
-                text: '在线玩家'
+                text: '每{{ .Data.Interval }}s在线'
             },
             tooltip: {},
             legend: {
@@ -115,7 +140,8 @@
                 data: times
             },
             yAxis: {
-                type: 'value'
+                type: 'value',
+                max: dynamicMax !== 0 ? dynamicMax : 'dataMax'
             },
             series: [{
                 name: '活跃人数',
@@ -128,5 +154,17 @@
 
     // 在需要更新图表时调用该函数
     updateChart();
+    layui.use(function () {
+        var table = layui.table;
+        var element = layui.element;
+        element.on('collapse(filter-collapse)', function (data) {
+            if (data.show) {
+                table.init('parse-table', {});
+            }
+        });
+        layui.code({
+            elem: '.code-resp'
+        });
+    });
 </script>
 {{template "footer" .}}

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -126,10 +127,11 @@ func GetServerInfo(host string) (Info, error) {
 		info.Status = "Offline"
 		return info, err
 	}
+	reg := regexp.MustCompile("(?s)\\[.*?\\]")
 	info.Ping = int(ping)
 	info.Status = "Online"
-	info.Name = buf.readString()
-	info.Maps = buf.readString()
+	info.Name = reg.ReplaceAllString(buf.readString(), "")
+	info.Maps = reg.ReplaceAllString(buf.readString(), "")
 	info.Players = buf.getInt()
 	info.Wave = buf.getInt()
 	info.Version = buf.getInt()
@@ -137,7 +139,7 @@ func GetServerInfo(host string) (Info, error) {
 	info.Gamemode.Id = GamemodeId(buf.get())
 	info.Gamemode.Name = info.Gamemode.Id.Name()
 	info.Limit = buf.getInt()
-	info.Description = buf.readString()
+	info.Description = reg.ReplaceAllString(buf.readString(), "")
 	info.Modename = buf.readString()
 	return info, nil
 }
