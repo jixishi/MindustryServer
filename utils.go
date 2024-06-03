@@ -20,7 +20,7 @@ func structprint(name string, a any) {
 }
 func inServers(arr []Server, target Server) bool {
 	for _, v := range arr {
-		if v == target {
+		if v.Host == target.Host {
 			return true
 		}
 	}
